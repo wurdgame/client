@@ -4,7 +4,9 @@ const socketio = require('socket.io-client');
 const PORT = process.env.PORT || 3000;
 const URL = process.env.URL || 'http://localhost:3000';
 
-const wurd = socketio.connect(`${URL}${PORT}/wurd`); // might need fixin'
+// const wurd = socketio.connect(`${URL}${PORT}/wurd`); // might need fixin'
+
+const wurd = socketio.connect(`http://localhost:3000/wurd`);
 
 const uuid = require('uuid').v4;
 const randomWords = require('random-words');
@@ -12,12 +14,15 @@ const readline = require('readline').createInterface({
   input: process.stdin,
   output: process.stdout,
 });
+//looks like you need v17+ of node
+// const ac = new AbortController();
+// const signal = ac.signal;
 
 let idGen = uuid();
 let userName = randomWords();
 
-console.log("Generated ID is: " + idGen);
-console.log("Generated userName is: " + userName);
+console.log('Generated ID is: ' + idGen);
+console.log('Generated userName is: ' + userName);
 
 
 const player = {
@@ -26,21 +31,40 @@ const player = {
 };
 
 // connect client/player
-wurd.on('connection', (player) => {
-  console.log(player);
-  wurd.emit('playerinfo', player);
+wurd.on('connect', (payload) => {
+  payload = player;
+  console.log('PLAYER:', payload);
+  wurd.emit('join', payload);
 });
+
+wurd.on('gamestatus', (status) => {
+  console.log(status);
+});
+
+wurd.on('gamestart', async (payload) => {
+  getWord(payload);
+});
+
+wurd.on('newround', async (payload) => {
+  getWord(payload);
+});
+
 
 
 // have player re-arrange string
 
-function get_word(letters) {
+function getWord(payload) {
+  //take letters from payload
+  let letters = payload.letters;
+  readline.question(`You have 30 seconds to form these letters into the longest word you can from ${letters}\n`, answer => {
+    console.log(`you entered ${answer}!`);
+    readline.close();
+    console.log('Answer after readline.close(): ', answer);
+    payload.answer = answer;
+    console.log(payload);
 
-  readline.question(`Form these letters into the longest word you can from ${letters}`, answer => {
-    console.log(`you entered ${answer}!`)
-    readline.close()
-  })
-  return answer
+    wurd.emit('submit', payload);
+  });
 }
 
 
@@ -50,21 +74,41 @@ wurd.on('receivestring', (payload) => {
 });
 
 
+/*
+const ac = new AbortController();
+const signal = ac.signal;
 
+rl.question('What is your favorite food? ', { signal }, (answer) => {
+  console.log(`Oh, so your favorite food is ${answer}`);
+});
 
+signal.addEventListener('abort', () => {
+  console.log('The food question timed out');
+}, { once: true });
+
+tTimeout(() => ac.abort(), 10000);
+*/
+// 
+
+// 
 // player re-enters strings which is accepted as an arg
 
-const answer = getWord(payload.letters);
+//const answer = getWord(payload.letters);
+
+// const answer = readline.question('See the letters? Re-arrange them into a word. The longest word that 1) Uses the letters provided AND 2) Exists in the dictionary, wins!');
+
+// console.log('You entered: ' + answer);
+
 
 // arg is checked against the pool of letters
 // if passes continue
 
-if (!payload.letters.includes(answer)) {
-  console.log('Stop cheating! You may only use the letters provided')
-} else {
-  payload.letters = answer;
-  wurd.emit('player answer', payload)
-}
+// if (!payload.letters.includes(answer)) {
+//   console.log('Stop cheating! You may only use the letters provided')
+// } else {
+//   payload.letters = answer;
+//   wurd.emit('player answer', payload)
+// }
 
 
 // receive string from hub

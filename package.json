@@ -1,14 +1,15 @@
 {
   "dependencies": {
     "jest": "^27.4.7",
+    "random-words": "^1.1.2",
     "socket.io": "^4.4.1",
-    "socket.io-client": "^4.4.1"
+    "socket.io-client": "^4.4.1",
+    "uuid": "^8.3.2"
   },
   "name": "client",
   "description": "client for wurdgame",
   "version": "1.0.0",
   "main": "player.js",
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
