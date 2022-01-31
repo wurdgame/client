@@ -4,6 +4,9 @@
 
 Wurdgame is a 2 player word game using Socket.io. The game begins when two players join. They will each then be sent a set of random letters. Each player will then create the longest word that they can with the letters and send them back to the hub. The hub will then calculate the players' words and let them know which player won.
 
+## Deployed URL
+
+- [Wurd](https://wurdgame.herokuapp.com/)
 
 ## Hub Responsibilties
 
