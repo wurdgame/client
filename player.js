@@ -45,8 +45,8 @@ wurd.on('gamestart', async (payload) => {
   getWord(payload);
 });
 
-wurd.on('newround', async (payload) => {
-  getWord(payload);
+wurd.on('playagain', payload => {
+  playagain();
 });
 
 
@@ -58,15 +58,32 @@ function getWord(payload) {
   let letters = payload.letters;
   readline.question(`You have 30 seconds to form these letters into the longest word you can from ${letters}\n`, answer => {
     console.log(`you entered ${answer}!`);
-    readline.close();
     console.log('Answer after readline.close(): ', answer);
     payload.answer = answer;
+    payload.userName = userName;
     console.log(payload);
 
     wurd.emit('submit', payload);
   });
 }
 
+function playagain() {
+  readline.question(`PLAY AGAIN? Y OR N...\n`, answer => {
+    console.log(answer);
+    if (answer.toUpperCase() === 'Y' || answer.toUpperCase() === 'YES') {
+      console.log('you entered', answer);
+      wurd.emit('newround', player)
+    } else if (answer.toUpperCase() === 'N' || answer.toUpperCase() === 'NO') {
+      console.log('you entered', answer);
+
+      wurd.disconnect();
+    } else {
+      console.log('you entered into the ELSE statement', answer);
+
+      playagain();
+    }
+  });
+}
 
 // create and connect client and display to player
 wurd.on('receivestring', (payload) => {
