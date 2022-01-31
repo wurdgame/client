@@ -2,9 +2,9 @@
 
 const socketio = require('socket.io-client');
 const PORT = process.env.PORT || 3000;
-const URL = process.env.URL || 'http://localhost:3000';
+const URL = process.env.URL || 'http://localhost:';
 
-const wurd = socketio.connect(`${URL}${PORT}/wurd`); // might need fixin'
+const wurd = socketio.connect(`${URL}${PORT}/wurd`);
 
 const uuid = require('uuid').v4;
 const randomWords = require('random-words');
@@ -16,8 +16,8 @@ const readline = require('readline').createInterface({
 let idGen = uuid();
 let userName = randomWords();
 
-console.log("Generated ID is: " + idGen);
-console.log("Generated userName is: " + userName);
+console.log('Generated ID is: ' + idGen);
+console.log('Generated userName is: ' + userName);
 
 
 const player = {
@@ -26,51 +26,56 @@ const player = {
 };
 
 // connect client/player
-wurd.on('connection', (player) => {
-  console.log(player);
-  wurd.emit('playerinfo', player);
+wurd.on('connect', (payload) => {
+  payload = player;
+  console.log('PLAYER:', payload);
+  wurd.emit('join', payload);
 });
+
+wurd.on('gamestatus', (status) => {
+  console.log(status);
+});
+
+wurd.on('gamestart', async (payload) => {
+  console.log('********* ROUND START! *********');
+  getWord(payload);
+});
+
+wurd.on('playagain', payload => {
+  console.log(payload);
+  playagain();
+});
+
 
 
 // have player re-arrange string
 
-function get_word(letters) {
+function getWord(payload) {
+  //take letters from payload
+  let letters = payload.letters;
+  readline.question(`You have 30 seconds to form these letters into the longest word you can from ${letters}\n`, answer => {
+    console.log(`you entered ${answer}!`);
+    console.log('Answer after readline.close(): ', answer);
+    payload.answer = answer;
+    payload.userName = userName;
+    console.log(payload);
 
-  readline.question(`Form these letters into the longest word you can from ${letters}`, answer => {
-    console.log(`you entered ${answer}!`)
-    readline.close()
-  })
-  return answer
+    wurd.emit('submit', payload);
+  });
 }
 
+function playagain() {
+  readline.question(`PLAY AGAIN? Y OR N...\n`, answer => {
+    if (answer.toUpperCase() === 'Y' || answer.toUpperCase() === 'YES') {
+      console.log('YOU ENTERED: ', answer);
+      wurd.emit('newround', player);
+    } else if (answer.toUpperCase() === 'N' || answer.toUpperCase() === 'NO') {
+      console.log('YOU HAVE DISCONNECTED FROM WURDGAME, GOODBYE!');
+      wurd.disconnect(player);
+    } else {
+      console.log('NOT AN EXPECTED REPONSE: ', answer);
 
-// create and connect client and display to player
-wurd.on('receivestring', (payload) => {
-  console.log(payload);
-});
-
-
-
-
-// player re-enters strings which is accepted as an arg
-
-const answer = getWord(payload.letters);
-
-// arg is checked against the pool of letters
-// if passes continue
-
-if (!payload.letters.includes(answer)) {
-  console.log('Stop cheating! You may only use the letters provided')
-} else {
-  payload.letters = answer;
-  wurd.emit('player answer', payload)
+      playagain();
+    }
+  });
 }
-
-
-// receive string from hub
-// emit new string to hub
-
-// payload includes new string and clientId
-// emit new string to hub
-
-// payload includes new string and clientId
