@@ -4,7 +4,9 @@ const socketio = require('socket.io-client');
 const PORT = process.env.PORT || 3000;
 const URL = process.env.URL || 'http://localhost:';
 
-const wurd = socketio.connect(`${URL}${PORT}/wurd`);
+// const wurd = socketio.connect(`${URL}${PORT}/wurd`);
+const wurd = socketio.connect(`https://wurdgame.herokuapp.com/wurd`);
+
 
 const uuid = require('uuid').v4;
 const randomWords = require('random-words');
